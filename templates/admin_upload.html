@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+  <div class="col-12 col-lg-8">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Admin: Upload Sales Dataset (CSV)</h5>
+        <form method="post" enctype="multipart/form-data">
+          <div class="mb-3">
+            <input type="file" name="file" accept=".csv" class="form-control" required />
+          </div>
+          <button class="btn btn-primary" type="submit">Upload</button>
+          <a class="btn btn-outline-secondary" href="/admin/export/csv">Export CSV</a>
+          <a class="btn btn-outline-secondary" href="/admin/export/xlsx">Export Excel</a>
+          <a class="btn btn-outline-secondary" href="/admin/export/pdf">Export PDF</a>
+        </form>
+        <hr/>
+        <p class="small text-muted">Required columns: Brand, Model, RAM, Storage, Camera, Battery, Processor, Price, Units Sold, Region, Channel, Year.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+

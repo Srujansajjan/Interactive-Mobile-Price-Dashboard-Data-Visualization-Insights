@@ -1,0 +1,1038 @@
+{% extends 'base.html' %}
+{% block content %}
+{% if pbi_url %}
+  <!-- Power BI iframe mode -->
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Interactive Power BI Dashboard</h5>
+          <div class="ratio ratio-16x9">
+            <iframe title="Power BI" src="{{ pbi_url }}" allowfullscreen frameborder="0"></iframe>
+          </div>
+          <p class="text-muted mt-2">Use filters inside the report to slice by brand, model, channel, region, and year.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <!-- Custom JavaScript Dashboard -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Interactive Sales Dashboard</h5>
+          <div class="row g-2">
+            <div class="col-md-2">
+              <label class="form-label small">Brand</label>
+              <select id="filter-brand" class="form-select form-select-sm">
+                <option value="">All Brands</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Channel</label>
+              <select id="filter-channel" class="form-select form-select-sm">
+                <option value="">All Channels</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Region</label>
+              <select id="filter-region" class="form-select form-select-sm">
+                <option value="">All Regions</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Year</label>
+              <select id="filter-year" class="form-select form-select-sm">
+                <option value="">All Years</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">Price Range</label>
+              <select id="filter-price" class="form-select form-select-sm">
+                <option value="">All Prices</option>
+                <option value="0-20000">Under ₹20K</option>
+                <option value="20000-40000">₹20K - ₹40K</option>
+                <option value="40000-60000">₹40K - ₹60K</option>
+                <option value="60000-80000">₹60K - ₹80K</option>
+                <option value="80000-100000">₹80K - ₹1L</option>
+                <option value="100000-999999999">Above ₹1L</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small">&nbsp;</label>
+              <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearAllFilters()">Clear Filters</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-3">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2">Total Units Sold</h6>
+          <h3 class="card-title mb-0" id="kpi-units">0</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2">Total Revenue</h6>
+          <h3 class="card-title mb-0" id="kpi-revenue">₹0</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-info text-white">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2">Total Models</h6>
+          <h3 class="card-title mb-0" id="kpi-models">0</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2">Regions</h6>
+          <h3 class="card-title mb-0" id="kpi-customers">0</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Units Sold by Brand</h6>
+          <div style="height: 300px;">
+            <canvas id="chart-brand-sales"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Revenue Distribution by Brand</h6>
+          <div style="height: 300px;">
+            <canvas id="chart-brand-revenue"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Sales by Channel</h6>
+          <div style="height: 300px;">
+            <canvas id="chart-channel"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Sales by Region</h6>
+          <div style="height: 300px;">
+            <canvas id="chart-region"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Yearly Trends -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Monthly/Yearly Sales Trends</h6>
+          <div style="height: 400px;">
+            <canvas id="chart-trends"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Visualizations -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <h5 class="mb-3">Advanced Analytics</h5>
+    </div>
+  </div>
+
+  <!-- Heatmap and Scatter -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Sales Heatmap: Region × Year</h6>
+          <div style="height: 400px;">
+            <canvas id="chart-heatmap"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Price vs Units Sold (Scatter)</h6>
+          <div style="height: 400px;">
+            <canvas id="chart-scatter"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Treemap and Sankey -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Brand/Model Hierarchy (Treemap)</h6>
+          <div style="height: 400px;">
+            <canvas id="chart-treemap"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Top Performing Models Leaderboard</h6>
+          <div class="mb-2">
+            <select id="top-models-sort" class="form-select form-select-sm" style="width: auto; display: inline-block;">
+              <option value="units">Sort by Units Sold</option>
+              <option value="revenue">Sort by Revenue</option>
+              <option value="price">Sort by Price</option>
+            </select>
+          </div>
+          <div style="height: 400px; overflow-y: auto;" id="chart-top-models"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Correlation Matrix -->
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-title">Specifications vs Sales Performance (Correlation)</h6>
+          <div style="height: 400px;">
+            <canvas id="chart-correlation"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script>
+<script>
+{% if not pbi_url %}
+// Custom Dashboard JavaScript
+let charts = {};
+let isLoading = false;
+let filterListeners = [];
+let loadTimeout = null;
+let cachedTopModelsData = []; // Cache for top models data
+
+function formatNumber(num) {
+  if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+  return num.toString();
+}
+
+function formatCurrency(num) {
+  if (num >= 10000000) return '₹' + (num / 10000000).toFixed(2) + 'Cr';
+  if (num >= 100000) return '₹' + (num / 100000).toFixed(1) + 'L';
+  if (num >= 1000) return '₹' + (num / 1000).toFixed(1) + 'K';
+  return '₹' + num.toString();
+}
+
+function removeFilterListeners() {
+  filterListeners.forEach(({element, handler}) => {
+    element.removeEventListener('change', handler);
+  });
+  filterListeners = [];
+}
+
+function addFilterListeners() {
+  const brandFilter = document.getElementById('filter-brand');
+  const channelFilter = document.getElementById('filter-channel');
+  const regionFilter = document.getElementById('filter-region');
+  const yearFilter = document.getElementById('filter-year');
+  const priceFilter = document.getElementById('filter-price');
+  
+  const handler = () => {
+    // Debounce: clear any pending request and schedule a new one
+    if (loadTimeout) {
+      clearTimeout(loadTimeout);
+    }
+    loadTimeout = setTimeout(() => {
+      if (!isLoading) {
+        loadDashboard();
+      }
+    }, 300); // Wait 300ms after last change
+  };
+  
+  filterListeners = [
+    {element: brandFilter, handler},
+    {element: channelFilter, handler},
+    {element: regionFilter, handler},
+    {element: yearFilter, handler},
+    {element: priceFilter, handler}
+  ];
+  
+  filterListeners.forEach(({element, handler}) => {
+    if (element) {
+      element.addEventListener('change', handler);
+    }
+  });
+}
+
+function clearAllFilters() {
+  document.getElementById('filter-brand').value = '';
+  document.getElementById('filter-channel').value = '';
+  document.getElementById('filter-region').value = '';
+  document.getElementById('filter-year').value = '';
+  document.getElementById('filter-price').value = '';
+  loadDashboard();
+}
+
+function loadDashboard() {
+  if (isLoading) return; // Prevent concurrent requests
+  isLoading = true;
+  
+  const params = new URLSearchParams();
+  const brand = document.getElementById('filter-brand')?.value || '';
+  const channel = document.getElementById('filter-channel')?.value || '';
+  const region = document.getElementById('filter-region')?.value || '';
+  const year = document.getElementById('filter-year')?.value || '';
+  const price = document.getElementById('filter-price')?.value || '';
+  
+  if (brand) params.set('brand', brand);
+  if (channel) params.set('channel', channel);
+  if (region) params.set('region', region);
+  if (year) params.set('year', year);
+  if (price) params.set('price', price);
+
+  fetch('/api/data?' + params.toString())
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    })
+    .then(data => {
+      removeFilterListeners(); // Prevent events during update
+      updateKPIs(data.kpis);
+      updateFilters(data.filters);
+      updateCharts(data);
+      addFilterListeners(); // Re-attach listeners
+      isLoading = false;
+    })
+    .catch(err => {
+      console.error('Error loading dashboard:', err);
+      isLoading = false;
+      // Re-attach listeners even on error
+      addFilterListeners();
+    });
+}
+
+function updateKPIs(kpis) {
+  document.getElementById('kpi-units').textContent = formatNumber(kpis.total_units);
+  document.getElementById('kpi-revenue').textContent = formatCurrency(kpis.total_revenue);
+  document.getElementById('kpi-models').textContent = kpis.total_models;
+  document.getElementById('kpi-customers').textContent = kpis.total_customers;
+}
+
+function updateFilters(filters) {
+  const brandSelect = document.getElementById('filter-brand');
+  const channelSelect = document.getElementById('filter-channel');
+  const regionSelect = document.getElementById('filter-region');
+  const yearSelect = document.getElementById('filter-year');
+  
+  // Store current values before clearing
+  const currentBrand = brandSelect.value;
+  const currentChannel = channelSelect.value;
+  const currentRegion = regionSelect.value;
+  const currentYear = yearSelect.value;
+
+  // Only update if options actually changed
+  const brandOptions = ['', ...filters.brands].join(',');
+  const currentBrandOptions = Array.from(brandSelect.options).map(o => o.value).join(',');
+  
+  if (brandOptions !== currentBrandOptions) {
+    brandSelect.innerHTML = '<option value="">All Brands</option>';
+    filters.brands.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b;
+      opt.textContent = b;
+      brandSelect.appendChild(opt);
+    });
+    // Restore selection
+    if (currentBrand && filters.brands.includes(currentBrand)) {
+      brandSelect.value = currentBrand;
+    }
+  }
+
+  const channelOptions = ['', ...filters.channels].join(',');
+  const currentChannelOptions = Array.from(channelSelect.options).map(o => o.value).join(',');
+  
+  if (channelOptions !== currentChannelOptions) {
+    channelSelect.innerHTML = '<option value="">All Channels</option>';
+    filters.channels.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      channelSelect.appendChild(opt);
+    });
+    if (currentChannel && filters.channels.includes(currentChannel)) {
+      channelSelect.value = currentChannel;
+    }
+  }
+
+  const regionOptions = ['', ...filters.regions].join(',');
+  const currentRegionOptions = Array.from(regionSelect.options).map(o => o.value).join(',');
+  
+  if (regionOptions !== currentRegionOptions) {
+    regionSelect.innerHTML = '<option value="">All Regions</option>';
+    filters.regions.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r;
+      opt.textContent = r;
+      regionSelect.appendChild(opt);
+    });
+    if (currentRegion && filters.regions.includes(currentRegion)) {
+      regionSelect.value = currentRegion;
+    }
+  }
+
+  const yearOptions = ['', ...filters.years.map(y => String(y))].join(',');
+  const currentYearOptions = Array.from(yearSelect.options).map(o => o.value).join(',');
+  
+  if (yearOptions !== currentYearOptions) {
+    yearSelect.innerHTML = '<option value="">All Years</option>';
+    filters.years.forEach(y => {
+      const opt = document.createElement('option');
+      opt.value = String(y);
+      opt.textContent = String(y);
+      yearSelect.appendChild(opt);
+    });
+    if (currentYear) {
+      yearSelect.value = currentYear;
+    }
+  }
+}
+
+function updateCharts(data) {
+  // Brand Sales Bar Chart
+  const brandLabels = Object.keys(data.brand_sales).sort((a, b) => data.brand_sales[b] - data.brand_sales[a]);
+  const brandValues = brandLabels.map(b => data.brand_sales[b]);
+  
+  if (charts.brandSales) {
+    charts.brandSales.data.labels = brandLabels;
+    charts.brandSales.data.datasets[0].data = brandValues;
+    charts.brandSales.update('none'); // Update without animation
+  } else {
+    charts.brandSales = new Chart(document.getElementById('chart-brand-sales'), {
+      type: 'bar',
+      data: {
+        labels: brandLabels,
+        datasets: [{
+          label: 'Units Sold',
+          data: brandValues,
+          backgroundColor: 'rgba(54, 162, 235, 0.8)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        animation: false,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  // Brand Revenue Pie Chart
+  const revenueLabels = Object.keys(data.brand_revenue).sort((a, b) => data.brand_revenue[b] - data.brand_revenue[a]);
+  const revenueValues = revenueLabels.map(b => data.brand_revenue[b]);
+  const pieColors = [
+    'rgba(255, 99, 132, 0.8)',
+    'rgba(54, 162, 235, 0.8)',
+    'rgba(255, 206, 86, 0.8)',
+    'rgba(75, 192, 192, 0.8)',
+    'rgba(153, 102, 255, 0.8)',
+    'rgba(255, 159, 64, 0.8)',
+    'rgba(199, 199, 199, 0.8)',
+    'rgba(83, 102, 255, 0.8)',
+    'rgba(255, 99, 255, 0.8)',
+    'rgba(99, 255, 132, 0.8)'
+  ];
+  
+  if (charts.brandRevenue) {
+    charts.brandRevenue.data.labels = revenueLabels;
+    charts.brandRevenue.data.datasets[0].data = revenueValues;
+    charts.brandRevenue.update('none');
+  } else {
+    charts.brandRevenue = new Chart(document.getElementById('chart-brand-revenue'), {
+      type: 'pie',
+      data: {
+        labels: revenueLabels,
+        datasets: [{
+          data: revenueValues,
+          backgroundColor: pieColors.slice(0, revenueLabels.length)
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        animation: false
+      }
+    });
+  }
+
+  // Channel Sales Pie Chart
+  const channelLabels = Object.keys(data.channel_sales);
+  const channelValues = channelLabels.map(c => data.channel_sales[c]);
+  
+  if (charts.channel) {
+    charts.channel.data.labels = channelLabels;
+    charts.channel.data.datasets[0].data = channelValues;
+    charts.channel.update('none');
+  } else {
+    charts.channel = new Chart(document.getElementById('chart-channel'), {
+      type: 'doughnut',
+      data: {
+        labels: channelLabels,
+        datasets: [{
+          data: channelValues,
+          backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(255, 99, 132, 0.8)', 'rgba(75, 192, 192, 0.8)']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        animation: false
+      }
+    });
+  }
+
+  // Region Sales Bar Chart
+  const regionLabels = Object.keys(data.region_sales).sort((a, b) => data.region_sales[b] - data.region_sales[a]);
+  const regionValues = regionLabels.map(r => data.region_sales[r]);
+  
+  if (charts.region) {
+    charts.region.data.labels = regionLabels;
+    charts.region.data.datasets[0].data = regionValues;
+    charts.region.update('none');
+  } else {
+    charts.region = new Chart(document.getElementById('chart-region'), {
+      type: 'bar',
+      data: {
+        labels: regionLabels,
+        datasets: [{
+          label: 'Units Sold',
+          data: regionValues,
+          backgroundColor: 'rgba(75, 192, 192, 0.8)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        animation: false,
+        indexAxis: 'y',
+        scales: { x: { beginAtZero: true } }
+      }
+    });
+  }
+
+  // Yearly Trends Line Chart
+  const years = Object.keys(data.yearly_trends).sort();
+  const trendUnits = years.map(y => data.yearly_trends[y].units);
+  const trendRevenue = years.map(y => data.yearly_trends[y].revenue);
+  
+  if (charts.trends) {
+    charts.trends.data.labels = years;
+    charts.trends.data.datasets[0].data = trendUnits;
+    charts.trends.data.datasets[1].data = trendRevenue;
+    charts.trends.update('none');
+  } else {
+    charts.trends = new Chart(document.getElementById('chart-trends'), {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [
+          {
+            label: 'Units Sold',
+            data: trendUnits,
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            yAxisID: 'y'
+          },
+          {
+            label: 'Revenue',
+            data: trendRevenue,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 3,
+        animation: false,
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            beginAtZero: true
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            beginAtZero: true,
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+  }
+
+  // Advanced Visualizations
+  updateAdvancedCharts(data);
+}
+
+function updateAdvancedCharts(data) {
+  try {
+    // 1. Heatmap: Region × Year
+    const heatmapEntries = Object.values(data.heatmap_data || {});
+    if (heatmapEntries.length > 0) {
+      const regions = [...new Set(heatmapEntries.map(h => h && h.region).filter(Boolean))].sort();
+      const years = [...new Set(heatmapEntries.map(h => h && h.year).filter(Boolean))].sort();
+      
+      if (regions.length > 0 && years.length > 0) {
+        const heatmapMatrix = regions.map(region => 
+          years.map(year => {
+            const entry = heatmapEntries.find(h => h.region === region && h.year === year);
+            return entry && entry.sales ? entry.sales : 0;
+          })
+        );
+        updateHeatmap(heatmapMatrix, regions, years);
+      }
+    }
+  } catch (err) {
+    console.error('Error updating heatmap:', err);
+  }
+
+  // 2. Scatter Plot: Price vs Units Sold
+  const scatterPoints = (data.scatter_data || []).map(d => ({
+    x: d.x,
+    y: d.y
+  }));
+
+  if (charts.scatter) {
+    charts.scatter.data.datasets[0].data = scatterPoints;
+    charts.scatter.update('none');
+  } else {
+    charts.scatter = new Chart(document.getElementById('chart-scatter'), {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Price vs Sales',
+          data: scatterPoints,
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          pointRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        animation: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Price (₹)'
+            },
+            beginAtZero: true
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Units Sold'
+            },
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Price: ₹${context.parsed.x.toLocaleString()}, Units: ${context.parsed.y.toLocaleString()}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  try {
+    // 3. Treemap: Brand/Model Hierarchy (using custom implementation)
+    const treemapData = data.treemap_data || {};
+    if (Object.keys(treemapData).length > 0) {
+      updateTreemap(treemapData);
+    }
+  } catch (err) {
+    console.error('Error updating treemap:', err);
+  }
+
+  try {
+    // 4. Top Performing Models Leaderboard
+    const topModelsData = data.top_models_data || [];
+    cachedTopModelsData = topModelsData; // Cache for sorting
+    if (topModelsData.length > 0) {
+      updateTopModels(topModelsData);
+    }
+  } catch (err) {
+    console.error('Error updating top models:', err);
+  }
+
+  try {
+    // 5. Correlation Matrix: Specs vs Sales
+    const correlationData = data.correlation_data || [];
+    if (correlationData.length > 0) {
+      updateCorrelation(correlationData);
+    }
+  } catch (err) {
+    console.error('Error updating correlation:', err);
+  }
+}
+
+function updateTreemap(treemapData) {
+  const canvas = document.getElementById('chart-treemap');
+  if (!canvas) return;
+  
+  const brands = Object.keys(treemapData).sort((a, b) => (treemapData[b].value || 0) - (treemapData[a].value || 0));
+  
+  if (brands.length === 0) return;
+  
+  // Simple treemap visualization using Chart.js
+  const treemapLabels = [];
+  const treemapValues = [];
+  const treemapColors = [];
+  
+  brands.forEach((brand, idx) => {
+    const brandData = treemapData[brand];
+    const models = Object.keys(brandData.children || {});
+    
+    if (models.length === 0) {
+      // If no models, show brand total
+      treemapLabels.push(brand);
+      treemapValues.push(brandData.value || 0);
+      treemapColors.push(`hsl(${(idx * 360 / Math.max(1, brands.length))}, 70%, 50%)`);
+    } else {
+      models.forEach(model => {
+        treemapLabels.push(`${brand} - ${model}`);
+        treemapValues.push((brandData.children[model].value || 0));
+        treemapColors.push(`hsl(${(idx * 360 / Math.max(1, brands.length))}, 70%, 50%)`);
+      });
+    }
+  });
+
+  if (treemapValues.length === 0 || treemapValues.every(v => v === 0)) return;
+
+  if (charts.treemap) {
+    charts.treemap.data.labels = treemapLabels;
+    charts.treemap.data.datasets[0].data = treemapValues;
+    charts.treemap.data.datasets[0].backgroundColor = treemapColors;
+    charts.treemap.update('none');
+  } else {
+    charts.treemap = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: treemapLabels,
+        datasets: [{
+          label: 'Units Sold',
+          data: treemapValues,
+          backgroundColor: treemapColors
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        animation: false,
+        scales: {
+          x: { beginAtZero: true }
+        }
+      }
+    });
+  }
+}
+
+function updateTopModels(topModelsData) {
+  const container = document.getElementById('chart-top-models');
+  const sortSelect = document.getElementById('top-models-sort');
+  if (!container) return;
+  
+  // Get sort option
+  const sortBy = sortSelect ? sortSelect.value : 'units';
+  
+  // Sort data
+  let sortedData = [...topModelsData];
+  if (sortBy === 'units') {
+    sortedData.sort((a, b) => (b.units_sold || 0) - (a.units_sold || 0));
+  } else if (sortBy === 'revenue') {
+    sortedData.sort((a, b) => (b.total_revenue || 0) - (a.total_revenue || 0));
+  } else if (sortBy === 'price') {
+    sortedData.sort((a, b) => (b.avg_price || 0) - (a.avg_price || 0));
+  }
+  
+  // Get top 15
+  const top15 = sortedData.slice(0, 15);
+  
+  // Create HTML table
+  let html = '<table class="table table-sm table-hover">';
+  html += '<thead><tr>';
+  html += '<th>#</th>';
+  html += '<th>Brand</th>';
+  html += '<th>Model</th>';
+  html += '<th class="text-end">Units</th>';
+  html += '<th class="text-end">Revenue</th>';
+  html += '<th class="text-end">Price</th>';
+  html += '<th>Regions</th>';
+  html += '</tr></thead><tbody>';
+  
+  top15.forEach((model, idx) => {
+    const rank = idx + 1;
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    html += `<tr>`;
+    html += `<td><strong>${medal}</strong></td>`;
+    html += `<td><span class="badge bg-primary">${model.brand || 'N/A'}</span></td>`;
+    html += `<td>${model.model || 'N/A'}</td>`;
+    html += `<td class="text-end">${formatNumber(model.units_sold || 0)}</td>`;
+    html += `<td class="text-end">${formatCurrency(model.total_revenue || 0)}</td>`;
+    html += `<td class="text-end">${formatCurrency(model.avg_price || 0)}</td>`;
+    html += `<td><span class="badge bg-info">${model.region_count || 0}</span></td>`;
+    html += `</tr>`;
+  });
+  
+  html += '</tbody></table>';
+  
+  container.innerHTML = html;
+  
+  // Add sort listener
+  if (sortSelect && !sortSelect.hasAttribute('data-listener-added')) {
+    sortSelect.setAttribute('data-listener-added', 'true');
+    sortSelect.addEventListener('change', () => {
+      // Use cached data if available, otherwise use provided data
+      const dataToUse = cachedTopModelsData.length > 0 ? cachedTopModelsData : topModelsData;
+      updateTopModels(dataToUse);
+    });
+  }
+}
+
+function updateHeatmap(matrix, regions, years) {
+  const canvas = document.getElementById('chart-heatmap');
+  if (!canvas) return;
+  
+  // Flatten matrix for bar chart visualization
+  const flatData = [];
+  const flatLabels = [];
+  regions.forEach((region, i) => {
+    years.forEach((year, j) => {
+      flatLabels.push(`${region} ${year}`);
+      flatData.push(matrix[i] && matrix[i][j] ? matrix[i][j] : 0);
+    });
+  });
+  
+  if (flatData.length === 0 || flatData.every(v => v === 0)) return;
+  
+  const maxValue = Math.max(...flatData);
+  
+  if (charts.heatmap) {
+    charts.heatmap.data.labels = flatLabels;
+    charts.heatmap.data.datasets[0].data = flatData;
+    charts.heatmap.update('none');
+  } else {
+    charts.heatmap = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: flatLabels,
+        datasets: [{
+          label: 'Sales',
+          data: flatData,
+          backgroundColor: function(context) {
+            const value = context.raw;
+            const alpha = maxValue > 0 ? Math.max(0.3, value / maxValue) : 0.3;
+            return `rgba(54, 162, 235, ${alpha})`;
+          },
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        animation: false,
+        scales: {
+          x: { beginAtZero: true }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Sales: ${context.parsed.x.toLocaleString()}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+function updateCorrelation(correlationData) {
+  if (correlationData.length === 0) return;
+
+  // Calculate correlation matrix
+  const metrics = ['ram', 'storage', 'price', 'units_sold', 'revenue'];
+  const matrix = metrics.map((m1, i) => 
+    metrics.map((m2, j) => {
+      if (i === j) return 1;
+      const pairs = correlationData
+        .map(d => ({ v1: d[m1], v2: d[m2] }))
+        .filter(p => p.v1 > 0 && p.v2 > 0);
+      
+      if (pairs.length === 0) return 0;
+      
+      const values1 = pairs.map(p => p.v1);
+      const values2 = pairs.map(p => p.v2);
+      
+      const mean1 = values1.reduce((a, b) => a + b, 0) / values1.length;
+      const mean2 = values2.reduce((a, b) => a + b, 0) / values2.length;
+      
+      const numerator = pairs.reduce((sum, p) => 
+        sum + (p.v1 - mean1) * (p.v2 - mean2), 0);
+      const denom1 = Math.sqrt(values1.reduce((sum, v) => sum + Math.pow(v - mean1, 2), 0));
+      const denom2 = Math.sqrt(values2.reduce((sum, v) => sum + Math.pow(v - mean2, 2), 0));
+      
+      return denom1 * denom2 === 0 ? 0 : numerator / (denom1 * denom2);
+    })
+  );
+
+  // Create correlation visualization
+  const canvas = document.getElementById('chart-correlation');
+  if (!canvas) return;
+  
+  // Flatten matrix for visualization
+  const flatData = [];
+  const flatLabels = [];
+  metrics.forEach((m1, i) => {
+    metrics.forEach((m2, j) => {
+      flatLabels.push(`${m1} vs ${m2}`);
+      flatData.push(matrix[i] && matrix[i][j] !== undefined ? matrix[i][j] : 0);
+    });
+  });
+  
+  if (flatData.length === 0) return;
+  
+  if (charts.correlation) {
+    charts.correlation.data.labels = flatLabels;
+    charts.correlation.data.datasets[0].data = flatData;
+    charts.correlation.update('none');
+  } else {
+    charts.correlation = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: flatLabels,
+        datasets: [{
+          label: 'Correlation',
+          data: flatData,
+          backgroundColor: function(context) {
+            const value = context.raw;
+            const alpha = Math.abs(value);
+            const color = value >= 0 ? 'rgba(75, 192, 192' : 'rgba(255, 99, 132';
+            return `${color}, ${Math.max(0.3, alpha)})`;
+          },
+          borderColor: function(context) {
+            return context.raw >= 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)';
+          },
+          borderWidth: 1
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1.5,
+        animation: false,
+        scales: {
+          x: {
+            min: -1,
+            max: 1,
+            title: {
+              display: true,
+              text: 'Correlation Coefficient'
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `Correlation: ${context.parsed.x.toFixed(2)}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+// Load dashboard on page load and set up listeners
+document.addEventListener('DOMContentLoaded', () => {
+  // Wait a bit for DOM to be fully ready
+  setTimeout(() => {
+    addFilterListeners();
+    loadDashboard();
+  }, 100);
+});
+{% endif %}
+</script>
+{% endblock %}
